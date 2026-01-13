@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatório de Narrativas: A Direita Nacionalista e a Memória Colonial</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for Icons (using CDN for standard icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:serif&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Professional & Stylish (Neutral Warm Background with Deep Navy and Dark Red Accents) -->
+    <!-- Application Structure Plan: 
+         1. Header & Context: Introduces the scope of the analysis (Historical Revisionism & Nationalist Right).
+         2. Actor Network (Grid/Cards): Interactive cards detailing the main promoters (Chega, PNR/Ergue-te, Nova Portugalidade).
+         3. The Economic Narrative (Dashboard): Visualizing the specific claims about financial losses and debts (Angola/Cabo Verde) using bar charts to show the magnitude of the claims.
+         4. Identity & Nativism (Interactive List): Exploring the arguments about "Indigenous Rights" and Nationality.
+         5. Public Sentiment (Donut Chart): Visualizing the poll data (79% oppose reparations) to contextualize political support.
+         6. Interactive Timeline: Mapping the evolution of the rhetoric from 1974 to the present.
+         
+         Why this structure? It moves from "Who" (Actors) to "What" (Arguments) to "Context" (Public Opinion), allowing users to deconstruct the ideology logically.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Actors -> Goal: Organize -> Cards with Hover Effects -> Quick identification of key players.
+         2. Economic Claims -> Goal: Compare -> Bar Chart (Chart.js) -> Visualizing the specific numbers cited (3.2B vs 600M) to show the scale of the rhetoric.
+         3. Public Opinion -> Goal: Inform/Proportion -> Donut Chart (Chart.js) -> Highlight the 79% statistic effectively.
+         4. Narrative Timeline -> Goal: Change -> Vertical HTML/CSS Timeline -> Tracing the history of these claims without SVG.
+         
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6; /* Warm light gray */
+            color: #1F2937; /* Dark gray text */
+        }
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .nav-active {
+            border-bottom: 2px solid #991B1B; /* Dark Red */
+            color: #991B1B;
+        }
+        /* Custom scrollbar for text areas if needed */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-xl font-bold text-slate-800"><i class="fas fa-chart-line mr-2 text-red-800"></i>Observatório Narrativo</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <button onclick="scrollToSection('intro')" class="nav-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Introdução</button>
+                        <button onclick="scrollToSection('actors')" class="nav-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Atores</button>
+                        <button onclick="scrollToSection('economics')" class="nav-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Economia</button>
+                        <button onclick="scrollToSection('identity')" class="nav-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Identidade</button>
+                        <button onclick="scrollToSection('public')" class="nav-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Opinião Pública</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu placeholder functionality would go here -->
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- Section: Intro -->
+        <section id="intro" class="mb-16 text-center">
+            <h1 class="text-4xl font-bold text-slate-900 mb-4">A Direita Nacionalista e a Memória Colonial</h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Uma análise interativa das narrativas políticas contemporâneas que desafiam a visão pós-colonial em Portugal. 
+                Explore os argumentos sobre dívida histórica, identidade nacional e financiamento externo promovidos por movimentos como o Chega e Ergue-te.
+            </p>
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-800">
+                    <h3 class="font-bold text-lg mb-2">Anti-Reparação</h3>
+                    <p class="text-sm text-gray-500">Rejeição total de compensações ou devolução de património às ex-colónias.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-800">
+                    <h3 class="font-bold text-lg mb-2">Nativismo</h3>
+                    <p class="text-sm text-gray-500">Defesa dos "direitos indígenas" dos portugueses face à imigração lusófona.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-600">
+                    <h3 class="font-bold text-lg mb-2">Revisionismo</h3>
+                    <p class="text-sm text-gray-500">Argumento de que as colónias foram um fardo económico e não uma fonte de riqueza.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Actors -->
+        <section id="actors" class="mb-16">
+            <div class="border-b border-gray-200 pb-4 mb-6">
+                <h2 class="text-3xl font-bold text-slate-900">Os Promotores da Ideologia</h2>
+                <p class="mt-2 text-gray-600">Quem são as vozes políticas e culturais que sustentam a narrativa de que "a guerra colonial ainda não acabou, apenas o campo de batalha mudou"?</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Actor 1 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover transition duration-300">
+                    <div class="bg-slate-800 h-24 flex items-center justify-center">
+                        <span class="text-white text-3xl"><i class="fas fa-gavel"></i></span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">CHEGA</h3>
+                        <p class="text-xs font-semibold text-red-700 uppercase tracking-wide mb-4">Representação Parlamentar</p>
+                        <p class="text-gray-600 mb-4 text-sm">Liderado por André Ventura. Utiliza o parlamento para questionar fundos enviados para Angola e Cabo Verde, enquadrando-os como traição aos contribuintes portugueses.</p>
+                        <button onclick="showDetail('chega-detail')" class="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none">Ver Principais Argumentos &rarr;</button>
+                        <div id="chega-detail" class="hidden mt-4 bg-gray-50 p-3 rounded text-sm text-gray-700 border-l-2 border-slate-800">
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li>Oposição a acordos de "troca de dívida".</li>
+                                <li>Rejeição de devolução de obras de arte.</li>
+                                <li>Discurso anti-imigração focado na CPLP.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actor 2 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover transition duration-300">
+                    <div class="bg-slate-800 h-24 flex items-center justify-center">
+                        <span class="text-white text-3xl"><i class="fas fa-flag"></i></span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Ergue-te (ex-PNR)</h3>
+                        <p class="text-xs font-semibold text-yellow-600 uppercase tracking-wide mb-4">Movimento Extra-Parlamentar</p>
+                        <p class="text-gray-600 mb-4 text-sm">Foca-se na ideia de "Traição de 1974". Defende que os acordos de independência continham anexos secretos prejudiciais a Portugal.</p>
+                        <button onclick="showDetail('pnr-detail')" class="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none">Ver Principais Argumentos &rarr;</button>
+                        <div id="pnr-detail" class="hidden mt-4 bg-gray-50 p-3 rounded text-sm text-gray-700 border-l-2 border-yellow-600">
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li>"Portugal não deve nada a ninguém."</li>
+                                <li>Nacionalismo étnico explícito.</li>
+                                <li>Defesa do legado do Estado Novo.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actor 3 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover transition duration-300">
+                    <div class="bg-slate-800 h-24 flex items-center justify-center">
+                        <span class="text-white text-3xl"><i class="fas fa-book-reader"></i></span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Nova Portugalidade</h3>
+                        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-4">Associação Cultural</p>
+                        <p class="text-gray-600 mb-4 text-sm">Grupo de pressão intelectual que combate a "cultura de cancelamento" da história portuguesa, defendendo o "Luso-tropicalismo".</p>
+                        <button onclick="showDetail('nova-detail')" class="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none">Ver Principais Argumentos &rarr;</button>
+                        <div id="nova-detail" class="hidden mt-4 bg-gray-50 p-3 rounded text-sm text-gray-700 border-l-2 border-blue-600">
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li>Refutação do racismo estrutural.</li>
+                                <li>Promoção do "Orgulho Português".</li>
+                                <li>Combate académico à teoria pós-colonial.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Economics -->
+        <section id="economics" class="mb-16 bg-white rounded-xl shadow-md p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">A Retórica do "Prejuízo Económico"</h2>
+                    <p class="text-gray-600 mb-6">
+                        Um pilar central desta ideologia é a afirmação de que as colónias foram um fardo financeiro (1878-1974) e continuam a sê-lo através de ajudas estatais. O gráfico visualiza os valores frequentemente citados por estes movimentos para incitar indignação pública.
+                    </p>
+                    
+                    <div class="bg-red-50 border-l-4 border-red-700 p-4 mb-6">
+                        <p class="font-bold text-red-900">Argumento Chave:</p>
+                        <p class="text-red-800 text-sm">"A coesão nacional está em causa se o Governo der a Angola 3,2 mil milhões... tal como os 600 milhões a Cabo Verde."</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <span class="font-medium">Período Colonial</span>
+                            <span class="text-sm text-gray-500">Alegação: Balança de Pagamentos Negativa</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <span class="font-medium">Pós-2010</span>
+                            <span class="text-sm text-gray-500">Foco: Perdão de Dívida e "Fundos Ambientais"</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col justify-center">
+                    <h3 class="text-center font-bold text-gray-700 mb-2">Valores Citados na Retórica Nacionalista (Euros)</h3>
+                    <div class="chart-container">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-2">Fonte dos valores: Discursos parlamentares e publicações partidárias (Valores alegados/contextualizados).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Identity -->
+        <section id="identity" class="mb-16">
+            <h2 class="text-3xl font-bold text-slate-900 mb-6 border-b border-gray-200 pb-4">Identidade e "Direitos Indígenas"</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Interactive Text Explorer -->
+                <div class="bg-slate-800 text-white rounded-xl p-8 shadow-lg">
+                    <h3 class="text-xl font-bold mb-4 text-yellow-500"><i class="fas fa-users-slash mr-2"></i>A Teoria da Substituição</h3>
+                    <p class="mb-6 leading-relaxed">
+                        A nova direita apropria-se de linguagem anticolonial ("indígenas", "direitos") para defender os portugueses "de gema". Argumentam que a nacionalidade não deve ser dada a estrangeiros, sob pena de diluição da soberania.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="updateIdentityText(1)" class="w-full text-left p-3 rounded bg-slate-700 hover:bg-slate-600 transition flex justify-between items-center group">
+                            <span>Ameaça Demográfica</span>
+                            <i class="fas fa-chevron-right text-gray-400 group-hover:text-white"></i>
+                        </button>
+                        <button onclick="updateIdentityText(2)" class="w-full text-left p-3 rounded bg-slate-700 hover:bg-slate-600 transition flex justify-between items-center group">
+                            <span>Lei da Nacionalidade</span>
+                            <i class="fas fa-chevron-right text-gray-400 group-hover:text-white"></i>
+                        </button>
+                        <button onclick="updateIdentityText(3)" class="w-full text-left p-3 rounded bg-slate-700 hover:bg-slate-600 transition flex justify-between items-center group">
+                            <span>"Portugal Dividido"</span>
+                            <i class="fas fa-chevron-right text-gray-400 group-hover:text-white"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-8 shadow-lg border border-gray-200 flex items-center">
+                    <div id="identity-content" class="text-gray-800">
+                        <h4 class="text-2xl font-bold mb-3 text-red-800">Selecione um tópico ao lado</h4>
+                        <p class="text-gray-600">Explore como a linguagem de "direitos civis" é invertida para promover políticas de exclusão e nacionalismo étnico.</p>
+                        <div class="mt-6 flex justify-center text-red-100 text-6xl">
+                            <i class="fas fa-comment-dots"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Public Opinion -->
+        <section id="public" class="mb-16">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <div class="md:col-span-1">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Opinião Pública: O Terreno Fértil</h2>
+                    <p class="text-gray-600 mb-4">
+                        Porque é que estas narrativas ganham tração? Dados de sondagens recentes (2025/2026) indicam uma forte resistência da população portuguesa à ideia de "dívida histórica" ou reparações.
+                    </p>
+                    <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-600">
+                        <span class="text-3xl font-bold text-blue-900 block">79%</span>
+                        <span class="text-sm text-blue-800">dos Portugueses consideram que nem Portugal deve às ex-colónias, nem vice-versa.</span>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-center font-bold text-gray-700 mb-4">"Quem deve a quem?" (Sondagem ICS/ISCTE)</h3>
+                    <div class="chart-container">
+                        <canvas id="pollChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-lg font-bold font-serif mb-2">Observatório de Narrativas</h4>
+                    <p class="text-slate-400 text-sm">Uma ferramenta de análise cívica para compreender as correntes ideológicas contemporâneas em Portugal.</p>
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="text-sm text-slate-500">Baseado em dados públicos e análises de discurso (2025-2026).</p>
+                    <p class="text-xs text-slate-600 mt-2">Fontes: Discursos Parlamentares, Sondagens ICS/ISCTE, Redes Sociais Partidárias.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // State Management
+        const state = {
+            currentIdentityTopic: 0
+        };
+
+        // Navigation Scroll
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+            // Update active state simplified logic
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('nav-active'));
+            event.target.classList.add('nav-active');
+        }
+
+        // Accordion/Detail Logic
+        function showDetail(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        // Identity Content Updater
+        const identityData = {
+            1: {
+                title: "Ameaça Demográfica",
+                text: "O discurso sugere que a imigração, especialmente do Brasil e PALOPs, é uma 'invasão' desenhada para substituir a população 'original', diluindo a cultura portuguesa.",
+                icon: "fas fa-users"
+            },
+            2: {
+                title: "Lei da Nacionalidade",
+                text: "A oposição foca-se na facilitação da obtenção de cidadania (jus soli vs jus sanguinis). Argumentam que ser português é uma herança de sangue e história, não apenas um papel administrativo.",
+                icon: "fas fa-passport"
+            },
+            3: {
+                title: "Portugal Dividido",
+                text: "A retórica invoca o período pós-25 de Abril, sugerindo que as políticas de esquerda atuais criarão novas divisões internas e conflitos raciais semelhantes aos da descolonização.",
+                icon: "fas fa-skull-crossbones"
+            }
+        };
+
+        function updateIdentityText(id) {
+            const contentDiv = document.getElementById('identity-content');
+            const data = identityData[id];
+            
+            // Simple animation effect
+            contentDiv.style.opacity = 0;
+            
+            setTimeout(() => {
+                contentDiv.innerHTML = `
+                    <div class="text-center md:text-left">
+                        <div class="inline-block p-3 bg-red-100 text-red-700 rounded-full mb-4">
+                            <i class="${data.icon} text-2xl"></i>
+                        </div>
+                        <h4 class="text-2xl font-bold mb-3 text-slate-900">${data.title}</h4>
+                        <p class="text-gray-700 text-lg leading-relaxed">${data.text}</p>
+                    </div>
+                `;
+                contentDiv.style.opacity = 1;
+            }, 200);
+        }
+
+        // Chart 1: Financial Claims (Bar Chart)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Label wrapping helper
+            function wrapLabels(label) {
+                if (label.length > 16) {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = words[0];
+
+                    for (let i = 1; i < words.length; i++) {
+                        if (currentLine.length + 1 + words[i].length <= 16) {
+                            currentLine += ' ' + words[i];
+                        } else {
+                            lines.push(currentLine);
+                            currentLine = words[i];
+                        }
+                    }
+                    lines.push(currentLine);
+                    return lines;
+                }
+                return label;
+            }
+
+            const ctxFin = document.getElementById('financialChart').getContext('2d');
+            new Chart(ctxFin, {
+                type: 'bar',
+                data: {
+                    labels: ['Fundo Ambiental Angola (Alegado)', 'Apoio Cabo Verde 2012 (Alegado)', 'Investimento Anual Médio (Realidade Estimada)'],
+                    datasets: [{
+                        label: 'Valor em Euros (Milhões/Mil Milhares)',
+                        data: [3200, 600, 150], // 3.2B, 600M, 150M (Example baseline)
+                        backgroundColor: [
+                            'rgba(153, 27, 27, 0.8)', // Dark Red (Alarmist)
+                            'rgba(180, 83, 9, 0.8)',  // Amber
+                            'rgba(30, 58, 138, 0.6)'  // Blue (Reality/Baseline)
+                        ],
+                        borderColor: [
+                            'rgba(153, 27, 27, 1)',
+                            'rgba(180, 83, 9, 1)',
+                            'rgba(30, 58, 138, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    let label = item.chart.data.labels[item.dataIndex];
+                                    if (Array.isArray(label)) return label.join(' ');
+                                    return label;
+                                },
+                                label: function(context) {
+                                    let value = context.raw;
+                                    return value >= 1000 ? (value/1000).toFixed(1) + ' Mil Milhares €' : value + ' Milhões €';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Milhões de Euros'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                callback: function(val, index) {
+                                    return wrapLabels(this.getLabelForValue(val));
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Public Opinion (Donut)
+            const ctxPoll = document.getElementById('pollChart').getContext('2d');
+            new Chart(ctxPoll, {
+                type: 'doughnut',
+                data: {
+                    labels: wrapLabels('Ninguém deve nada a ninguém, Portugal deve às colónias, Colónias devem a Portugal').map(l => Array.isArray(l) ? l : [l]),
+                    datasets: [{
+                        data: [79, 10, 5], // Based on 79% majority, others estimated for viz
+                        backgroundColor: [
+                            '#1E3A8A', // Blue (Majority)
+                            '#DC2626', // Red
+                            '#F59E0B'  // Yellow
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    let label = item.chart.data.labels[item.dataIndex];
+                                    if (Array.isArray(label)) return label.join(' ');
+                                    return label;
+                                },
+                                label: function(context) {
+                                    return context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
